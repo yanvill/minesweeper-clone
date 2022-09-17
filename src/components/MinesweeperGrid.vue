@@ -5,6 +5,13 @@ import MinesweeperCell from "./MinesweeperCell.vue";
 defineEmits<{
   (e: "cell-changed", value: CellChangeEvent): void;
 }>();
+
+defineProps<{
+  gridHeight: number;
+  gridWidth: number;
+  disabled: boolean;
+  bombLocations: CellLocation[];
+}>();
 </script>
 
 <template>
@@ -16,7 +23,8 @@ defineEmits<{
           :key="x"
           :loc="[x, y]"
           :is-bomb="isBomb([x, y])"
-          v-on:changed="handleCellChange"
+          :disabled="disabled"
+          @changed="handleCellChange"
         />
       </tr>
     </table>
@@ -27,20 +35,9 @@ defineEmits<{
 import type { CellLocation } from "../types/minesweeper";
 import { defineComponent } from "vue";
 
-const currentBombLocations: CellLocation[] = [[1, 2]];
-
 export default defineComponent({
   components: {
     MinesweeperCell: MinesweeperCell,
-  },
-  props: {
-    gridHeight: Number,
-    gridWidth: Number,
-  },
-  data() {
-    return {
-      bombLocations: currentBombLocations as CellLocation[],
-    };
   },
   methods: {
     isBomb(loc: CellLocation) {

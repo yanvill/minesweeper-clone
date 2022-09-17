@@ -4,6 +4,7 @@ import type { CellLocation, CellChangeEvent } from "../types/minesweeper";
 defineProps<{
   loc: CellLocation;
   isBomb: boolean;
+  disabled: boolean;
 }>();
 
 defineEmits<{
@@ -32,33 +33,41 @@ export default defineComponent({
   },
   computed: {
     isLeftClickable() {
+      if (this.disabled) return false;
       return this.cellState == CellState.Untouched;
     },
     isRightClickable() {
+      if (this.disabled) return false;
       const validStates = [
         CellState.Untouched,
         CellState.Flagged,
-        CellState.Marked,
+        CellState.Unsure,
       ];
       return validStates.includes(this.cellState);
     },
     cellClass() {
+      var cellClasses: string[] = [];
+
+      if (this.disabled) {
+        cellClasses.push("disabled");
+      }
       const newClassMap = new Map<CellState, string>([
         [CellState.Untouched, "untouched"],
         [CellState.Exploded, "exploded"],
         [CellState.Flagged, "flagged"],
-        [CellState.Marked, "marked"],
+        [CellState.Unsure, "unsure"],
         [CellState.Cleared, "cleared"],
       ]);
 
-      var cellClass = newClassMap.get(this.cellState);
+      var stateClass = newClassMap.get(this.cellState);
 
-      if (cellClass == undefined) {
+      if (stateClass == undefined) {
         throw new Error(
           `Uh oh, we were supposed to know what the new cell class from ${this.cellState} would be`
         );
       }
-      return cellClass;
+      cellClasses.push(stateClass);
+      return cellClasses;
     },
   },
   methods: {
@@ -85,8 +94,8 @@ export default defineComponent({
       }
       const newStateMap = new Map<CellState, CellState>([
         [CellState.Untouched, CellState.Flagged],
-        [CellState.Flagged, CellState.Marked],
-        [CellState.Marked, CellState.Untouched],
+        [CellState.Flagged, CellState.Unsure],
+        [CellState.Unsure, CellState.Untouched],
       ]);
       var newState = newStateMap.get(this.cellState);
 
@@ -111,6 +120,12 @@ export default defineComponent({
 .minesweeper-cell {
   height: 2.5em;
   width: 2.5em;
+  cursor: pointer;
+}
+
+.minesweeper-cell.disabled {
+  filter: brightness(85%);
+  cursor: default;
 }
 
 .minesweeper-cell.untouched {
@@ -124,7 +139,7 @@ export default defineComponent({
   background: lightblue;
 }
 
-.minesweeper-cell.marked {
+.minesweeper-cell.unsure {
   background: orchid;
 }
 
