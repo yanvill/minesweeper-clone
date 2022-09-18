@@ -1,30 +1,35 @@
 <script setup lang="ts">
-import type { CellChangeEvent } from "../types/minesweeper";
+import type {
+  CellClickedEvent,
+  GameBoard,
+  GameHints,
+} from "../types/minesweeper";
 import MinesweeperCell from "./MinesweeperCell.vue";
 
-defineEmits<{
-  (e: "cell-changed", value: CellChangeEvent): void;
+defineProps<{
+  gameBoard: GameBoard;
+  hints: GameHints;
+  disabled: boolean;
 }>();
 
-defineProps<{
-  gridHeight: number;
-  gridWidth: number;
-  disabled: boolean;
-  bombLocations: CellLocation[];
+defineEmits<{
+  (e: "cell-clicked", value: CellClickedEvent): void;
 }>();
 </script>
 
 <template>
   <div class="minesweeper-grid">
     <table>
-      <tr v-for="y in gridHeight" :key="y">
+      <tr v-for="(row, x) in gameBoard" :key="`row-${x}`" :id="`row-${x}`">
         <MinesweeperCell
-          v-for="x in gridWidth"
-          :key="x"
+          v-for="(cellState, y) in row"
+          :id="`col-${y}`"
           :loc="[x, y]"
-          :is-bomb="isBomb([x, y])"
+          :key="`col-${y}`"
+          :cellState="gameBoard[x][y]"
+          :hint="hints[x][y]"
           :disabled="disabled"
-          @changed="handleCellChange"
+          @clicked="handleCellClicked"
         />
       </tr>
     </table>
@@ -32,7 +37,6 @@ defineProps<{
 </template>
 
 <script lang="ts">
-import type { CellLocation } from "../types/minesweeper";
 import { defineComponent } from "vue";
 
 export default defineComponent({
@@ -40,14 +44,8 @@ export default defineComponent({
     MinesweeperCell: MinesweeperCell,
   },
   methods: {
-    isBomb(loc: CellLocation) {
-      var filteredLocs = this.bombLocations.filter((bombLoc) => {
-        return loc[0] == bombLoc[0] && loc[1] == bombLoc[1];
-      });
-      return filteredLocs.length == 1;
-    },
-    handleCellChange(event: CellChangeEvent) {
-      this.$emit("cell-changed", event);
+    handleCellClicked(event: CellClickedEvent) {
+      this.$emit("cell-clicked", event);
     },
   },
 });

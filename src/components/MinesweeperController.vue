@@ -1,102 +1,98 @@
 <script setup lang="ts">
-import MinesweeperGrid from "../components/MinesweeperGrid.vue";
+import MinesweeperGrid from "@/components/MinesweeperGrid.vue";
+import MinesweeperScoreboard from "@/components/MinesweeperScoreboard.vue";
 </script>
 
 <template>
   <div class="controller">
+    <MinesweeperScoreboard :game-board="gameBoard" />
     <MinesweeperGrid
-      :grid-height="gridHeight"
-      :grid-width="gridWidth"
+      :game-board="gameBoard"
+      :hints="gameHints"
       :disabled="gameDisabled"
-      :bombLocations="bombLocations"
-      @cell-changed="handleCellChange"
+      @cell-clicked="handleCellClicked"
     />
   </div>
 </template>
 
 <script lang="ts">
-import { CellState } from "../types/minesweeper";
-import type {
-  CellLocation,
-  CellChangeEvent,
-  GameScore,
-} from "../types/minesweeper";
+import { CellState, type CellClickedEvent } from "../types/minesweeper";
+import BoardUtility from "@/utils/MinesweeperBoardUtility";
 import { defineComponent } from "vue";
 
-function getNewScore(height: number, width: number): GameScore {
-  return {
-    flagged: 0,
-    cleared: 0,
-    untouched: height * width,
-    unsure: 0,
-  };
-}
-
-function createBombLocations(
-  height: number,
-  width: number,
-  numBombs: number
-): CellLocation[] {
-  // TODO: Randomly generate bombs
-  return [
-    [1, 1],
-    [2, 1],
-    [3, 1],
-    [4, 1],
-    [5, 1],
-  ];
-}
+const INITIAL_UTILITY = new BoardUtility(10, 10, 5);
 
 export default defineComponent({
   data() {
     return {
-      gridHeight: 5,
-      gridWidth: 5,
-      numBombs: 5,
+      boardUtility: INITIAL_UTILITY,
+      gameBoard: INITIAL_UTILITY.board,
+      gameHints: INITIAL_UTILITY.hints,
       gameDisabled: false,
-      score: getNewScore(5, 5),
-      clearedCount: 0,
-      bombLocations: createBombLocations(5, 5, 5),
     };
   },
+  computed: {
+    boardWidth(): number {
+      return this.gameBoard[0].length;
+    },
+    boardHeight(): number {
+      return this.gameBoard.length;
+    },
+  },
   methods: {
-    resetScore(): GameScore {
-      return getNewScore(this.gridHeight, this.gridWidth);
+    setupGame(height: number, width: number, numBombs: number) {
+      this.boardUtility = new BoardUtility(height, width, numBombs);
+      this.gameBoard = this.boardUtility.board;
+      this.gameHints = this.boardUtility.hints;
     },
-    handleCellChange(event: CellChangeEvent) {
-      if (event.new == CellState.Exploded) {
-        this.handleExplosion();
-        return;
-      }
-      this.handleScoreChange(event);
-    },
-    handleScoreChange(event: CellChangeEvent) {
-      // TODO: Find a better way to update this using mapping
-      if (event.new == CellState.Cleared) {
-        this.score.cleared++;
-      } else if (event.new == CellState.Flagged) {
-        this.score.flagged++;
-      } else if (event.new == CellState.Unsure) {
-        this.score.unsure++;
-      } else if (event.new == CellState.Untouched) {
-        this.score.untouched++;
-      }
+    handleCellClicked(event: CellClickedEvent) {
+      if (this.gameDisabled) return;
 
-      if (event.old == CellState.Cleared) {
-        this.score.cleared--;
-      } else if (event.old == CellState.Flagged) {
-        this.score.flagged--;
-      } else if (event.old == CellState.Unsure) {
-        this.score.untouched--;
-      } else if (event.old == CellState.Untouched) {
-        this.score.untouched--;
+      if (event.isRightClick) {
+        this.handleRightClick(event.loc[0], event.loc[1]);
+      } else {
+        this.handleLeftClick(event.loc[0], event.loc[1]);
       }
-      var totalSquaresCompleted: number = this.score.cleared + this.numBombs;
-      if (totalSquaresCompleted == this.gridHeight * this.gridWidth) {
-        this.handleGameCleared();
-      }
+    },
+    handleLeftClick(x: number, y: number) {
+      console.log("Handling left click on " + x + y);
+
+      const nextStateMap = new Map<CellState, CellState>([
+        [CellState.Untouched, CellState.Cleared],
+        [CellState.UntouchedBomb, CellState.Exploded],
+      ]);
+
+      var current = this.gameBoard[x][y];
+      var next = nextStateMap.get(current);
+
+      if (next == undefined) return;
+
+      this.gameBoard[x][y] = next;
+      if (next == CellState.Exploded) this.handleExplosion();
+
+      if (this.gameHints[x][y] == 0) this.clearAdjacentCells(x, y);
+    },
+    clearAdjacentCells(x: number, y: number) {
+      const validStates = [CellState.UntouchedBomb, CellState.Exploded];
+      return validStates.includes(this.gameBoard[x][y]);
+    },
+    handleRightClick(x: number, y: number) {
+      const nextStateMap = new Map<CellState, CellState>([
+        [CellState.Untouched, CellState.Flagged],
+        [CellState.UntouchedBomb, CellState.Flagged],
+        [CellState.Flagged, CellState.Unsure],
+        [CellState.Unsure, CellState.Untouched],
+      ]);
+
+      var current = this.gameBoard[x][y];
+      var next = nextStateMap.get(current);
+
+      if (next == undefined) return;
+
+      this.gameBoard[x][y] = next;
     },
     handleExplosion() {
+      window.alert("Explosion!!");
       this.gameDisabled = true;
     },
     handleGameCleared() {

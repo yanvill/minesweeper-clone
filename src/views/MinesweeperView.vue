@@ -3,14 +3,14 @@ import MinesweeperController from "../components/MinesweeperController.vue";
 </script>
 
 <template>
-  <div class="minesweeper">
-    <h1>Minesweeper</h1>
+  <main class="minesweeper">
     <MinesweeperController />
-  </div>
+  </main>
 </template>
 
 <style>
 .minesweeper {
+  padding-top: 20px;
   justify-content: center;
   align-items: center;
   width: 100%;

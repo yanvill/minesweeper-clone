@@ -2,23 +2,20 @@
 
 export enum CellState {
   Untouched,
+  UntouchedBomb,
   Exploded,
   Flagged,
   Unsure,
   Cleared,
 }
 
+export type GameBoard = CellState[][];
+
+export type GameHints = number[][];
+
 export type CellLocation = [number, number];
 
-export interface CellChangeEvent {
+export interface CellClickedEvent {
   loc: CellLocation;
-  old: CellState;
-  new: CellState;
-}
-
-export interface GameScore {
-  flagged: number;
-  cleared: number;
-  untouched: number;
-  unsure: number;
+  isRightClick: boolean;
 }

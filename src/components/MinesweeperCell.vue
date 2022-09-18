@@ -1,116 +1,71 @@
 <script setup lang="ts">
-import type { CellLocation, CellChangeEvent } from "../types/minesweeper";
+import type { CellLocation, CellClickedEvent } from "../types/minesweeper";
+import { CellState } from "../types/minesweeper";
 
 defineProps<{
   loc: CellLocation;
-  isBomb: boolean;
+  cellState: CellState;
+  hint: number;
   disabled: boolean;
 }>();
 
+// minesweeperEmitter
 defineEmits<{
-  (e: "changed", value: CellChangeEvent): void;
+  (e: "clicked", value: CellClickedEvent): void;
 }>();
 </script>
 
 <template>
   <td
     class="minesweeper-cell"
-    @click="handleLeftClick"
-    @contextmenu.prevent="handleRightClick"
+    @click="emitClick(false)"
+    @contextmenu.prevent="emitClick(true)"
     :class="cellClass"
-  ></td>
+  >
+    {{ cellContent }}
+  </td>
 </template>
 
 <script lang="ts">
-import { CellState } from "../types/minesweeper";
 import { defineComponent } from "vue";
 
 export default defineComponent({
-  data() {
-    return {
-      cellState: CellState.Untouched,
-    };
-  },
   computed: {
-    isLeftClickable() {
-      if (this.disabled) return false;
-      return this.cellState == CellState.Untouched;
-    },
-    isRightClickable() {
-      if (this.disabled) return false;
-      const validStates = [
-        CellState.Untouched,
-        CellState.Flagged,
-        CellState.Unsure,
-      ];
-      return validStates.includes(this.cellState);
+    cellContent() {
+      if (this.cellState == CellState.Cleared && this.hint > 0) {
+        return this.hint;
+      }
+      return `${CellState[this.cellState]}`;
     },
     cellClass() {
       var cellClasses: string[] = [];
-
-      if (this.disabled) {
-        cellClasses.push("disabled");
-      }
-      const newClassMap = new Map<CellState, string>([
+      if (this.disabled) cellClasses.push("disabled");
+      const stateClassMap = new Map<CellState, string>([
         [CellState.Untouched, "untouched"],
+        [CellState.UntouchedBomb, "untouched"],
         [CellState.Exploded, "exploded"],
         [CellState.Flagged, "flagged"],
         [CellState.Unsure, "unsure"],
         [CellState.Cleared, "cleared"],
       ]);
 
-      var stateClass = newClassMap.get(this.cellState);
+      var stateClass = stateClassMap.get(this.cellState);
 
       if (stateClass == undefined) {
         throw new Error(
           `Uh oh, we were supposed to know what the new cell class from ${this.cellState} would be`
         );
       }
-      cellClasses.push(stateClass);
+      cellClasses.push(stateClass)
       return cellClasses;
     },
   },
   methods: {
-    handleLeftClick() {
-      if (!this.isLeftClickable) {
-        return;
-      }
-      var newState = CellState.Cleared;
-
-      if (this.isBomb) {
-        newState = CellState.Exploded;
-      }
-
-      this.$emit("changed", {
+    emitClick(isRightClick: boolean) {
+      this.$emit("clicked", {
         loc: this.loc,
-        old: this.cellState,
-        new: newState,
+        isRightClick: isRightClick,
       });
-      this.cellState = newState;
-    },
-    handleRightClick() {
-      if (!this.isRightClickable) {
-        return;
-      }
-      const newStateMap = new Map<CellState, CellState>([
-        [CellState.Untouched, CellState.Flagged],
-        [CellState.Flagged, CellState.Unsure],
-        [CellState.Unsure, CellState.Untouched],
-      ]);
-      var newState = newStateMap.get(this.cellState);
-
-      if (newState == undefined) {
-        throw new Error(
-          `Uh oh, we were supposed to know what the new state from ${this.cellState} would be`
-        );
-      }
-
-      this.$emit("changed", {
-        loc: this.loc,
-        old: this.cellState,
-        new: newState,
-      });
-      this.cellState = newState;
     },
   },
 });
@@ -124,7 +79,7 @@ export default defineComponent({
 }
 
 .minesweeper-cell.disabled {
-  filter: brightness(85%);
+  filter: brightness(50%);
   cursor: default;
 }
 

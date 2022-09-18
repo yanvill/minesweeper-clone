@@ -1,5 +1,11 @@
 <template>
   <main>
-    <p>This is a pet project for a minesweeper clone because why not?</p>
+    <p>An entirely overcomplicated and unoptimized version of Minesweeper</p>
   </main>
 </template>
+
+<style scope="true">
+main {
+  text-align: center;
+}
+</style>
