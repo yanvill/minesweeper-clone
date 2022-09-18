@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import MinesweeperGrid from "@/components/MinesweeperGrid.vue";
-import MinesweeperScoreboard from "@/components/MinesweeperScoreboard.vue";
+import MinesweeperSettings from "@/components/MinesweeperSettings.vue";
 </script>
 
 <template>
   <div class="controller">
-    <MinesweeperScoreboard :game-board="gameBoard" />
+    <MinesweeperSettings @new-game="setupGame" />
     <MinesweeperGrid
       :game-board="gameBoard"
       :hints="gameHints"
@@ -16,11 +16,12 @@ import MinesweeperScoreboard from "@/components/MinesweeperScoreboard.vue";
 </template>
 
 <script lang="ts">
-import { CellState, type CellClickedEvent } from "../types/minesweeper";
+import { CellState, DefaultsSettings } from "../types/minesweeper";
+import type { CellClickedEvent, GameSettings } from "../types/minesweeper";
 import BoardUtility from "@/utils/MinesweeperBoardUtility";
 import { defineComponent } from "vue";
 
-const INITIAL_UTILITY = new BoardUtility(10, 10, 5);
+const INITIAL_UTILITY = new BoardUtility(DefaultsSettings);
 
 export default defineComponent({
   data() {
@@ -32,31 +33,43 @@ export default defineComponent({
     };
   },
   computed: {
-    boardWidth(): number {
-      return this.gameBoard[0].length;
+    cells() {
+      return this.gameBoard.reduce((acc, val) => acc.concat(val), []);
     },
-    boardHeight(): number {
-      return this.gameBoard.length;
+    gameInProgress(): boolean {
+      if (this.gameDisabled) return false;
+      let untouchedCount = this.cells.filter((cell) => {
+        return cell == CellState.Untouched || cell == CellState.UntouchedBomb;
+      }).length;
+
+      return untouchedCount != this.cells.length;
     },
   },
   methods: {
-    setupGame(height: number, width: number, numBombs: number) {
-      this.boardUtility = new BoardUtility(height, width, numBombs);
-      this.gameBoard = this.boardUtility.board;
-      this.gameHints = this.boardUtility.hints;
+    setupGame(settings: GameSettings) {
+      let startNewGame: boolean = true;
+
+      if (this.gameInProgress) {
+        startNewGame = confirm("Are you sure you want to start a new game?");
+      }
+
+      if (startNewGame) {
+        this.boardUtility = new BoardUtility(settings);
+        this.gameBoard = this.boardUtility.board;
+        this.gameHints = this.boardUtility.hints;
+        this.gameDisabled = false;
+      }
     },
     handleCellClicked(event: CellClickedEvent) {
       if (this.gameDisabled) return;
 
       if (event.isRightClick) {
-        this.handleRightClick(event.loc[0], event.loc[1]);
+        this.handleRightClick(...event.loc);
       } else {
-        this.handleLeftClick(event.loc[0], event.loc[1]);
+        this.handleLeftClick(...event.loc);
       }
     },
     handleLeftClick(x: number, y: number) {
-      console.log("Handling left click on " + x + y);
-
       const nextStateMap = new Map<CellState, CellState>([
         [CellState.Untouched, CellState.Cleared],
         [CellState.UntouchedBomb, CellState.Exploded],
@@ -70,11 +83,13 @@ export default defineComponent({
       this.gameBoard[x][y] = next;
       if (next == CellState.Exploded) this.handleExplosion();
 
-      if (this.gameHints[x][y] == 0) this.clearAdjacentCells(x, y);
-    },
-    clearAdjacentCells(x: number, y: number) {
-      const validStates = [CellState.UntouchedBomb, CellState.Exploded];
-      return validStates.includes(this.gameBoard[x][y]);
+      this.checkGameCleared();
+
+      if (this.gameHints[x][y] == 0) {
+        this.boardUtility.getAdjacentCells(x, y).forEach((loc) => {
+          this.handleLeftClick(...loc);
+        });
+      }
     },
     handleRightClick(x: number, y: number) {
       const nextStateMap = new Map<CellState, CellState>([
@@ -92,11 +107,25 @@ export default defineComponent({
       this.gameBoard[x][y] = next;
     },
     handleExplosion() {
-      window.alert("Explosion!!");
       this.gameDisabled = true;
     },
+    checkGameCleared() {
+      let clearedCount = this.cells.filter((cell) => {
+        return (
+          cell == CellState.Cleared ||
+          cell == CellState.Flagged ||
+          cell == CellState.Unsure
+        );
+      }).length;
+      let bombCount = this.cells.filter((cell) => {
+        return cell == CellState.UntouchedBomb;
+      }).length;
+
+      if (bombCount + clearedCount == this.cells.length) {
+        this.handleGameCleared();
+      }
+    },
     handleGameCleared() {
-      window.alert("Congrats!");
       this.gameDisabled = true;
     },
   },

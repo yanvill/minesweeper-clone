@@ -19,15 +19,16 @@ defineEmits<{
 
 <template>
   <div class="minesweeper-grid">
+    <br />
     <table>
-      <tr v-for="(row, x) in gameBoard" :key="`row-${x}`" :id="`row-${x}`">
+      <tr v-for="i in gameBoard.length" :key="`row-${i}`" :id="`row-${i}`">
         <MinesweeperCell
-          v-for="(cellState, y) in row"
-          :id="`col-${y}`"
-          :loc="[x, y]"
-          :key="`col-${y}`"
-          :cellState="gameBoard[x][y]"
-          :hint="hints[x][y]"
+          v-for="j in gameBoard[0].length"
+          :id="`col-${j}`"
+          :loc="[i - 1, j - 1]"
+          :key="`col-${j}`"
+          :cellState="gameBoard[i - 1][j - 1]"
+          :hint="hints[i - 1][j - 1]"
           :disabled="disabled"
           @clicked="handleCellClicked"
         />

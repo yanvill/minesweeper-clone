@@ -32,10 +32,15 @@ import { defineComponent } from "vue";
 export default defineComponent({
   computed: {
     cellContent() {
+      if (this.disabled && this.cellState == CellState.UntouchedBomb)
+        return "b";
+      if (this.cellState == CellState.Flagged) return "F";
+      if (this.cellState == CellState.Unsure) return "?";
+
       if (this.cellState == CellState.Cleared && this.hint > 0) {
         return this.hint;
       }
-      return `${CellState[this.cellState]}`;
+      return "";
     },
     cellClass() {
       var cellClasses: string[] = [];
@@ -56,7 +61,7 @@ export default defineComponent({
           `Uh oh, we were supposed to know what the new cell class from ${this.cellState} would be`
         );
       }
-      cellClasses.push(stateClass)
+      cellClasses.push(stateClass);
       return cellClasses;
     },
   },
@@ -76,6 +81,7 @@ export default defineComponent({
   height: 2.5em;
   width: 2.5em;
   cursor: pointer;
+  color: black;
 }
 
 .minesweeper-cell.disabled {

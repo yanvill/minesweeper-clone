@@ -4,9 +4,8 @@
   "exclude": ["src/**/__tests__/*"],
   "compilerOptions": {
     "composite": true,
-    "target": "es5",
     "lib": [
-      "es2019"
+      "ES2021"
     ],
     "baseUrl": ".",
     "paths": {
