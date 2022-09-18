@@ -16,12 +16,7 @@ defineEmits<{
 </script>
 
 <template>
-  <td
-    class="minesweeper-cell"
-    @click="emitClick(false)"
-    @contextmenu.prevent="emitClick(true)"
-    :class="cellClass"
-  >
+  <td class="minesweeper-cell" @click="emitClick(false)" @contextmenu.prevent="emitClick(true)" :class="cellClass">
     {{ cellContent }}
   </td>
 </template>
@@ -32,8 +27,7 @@ import { defineComponent } from "vue";
 export default defineComponent({
   computed: {
     cellContent() {
-      if (this.disabled && this.cellState == CellState.UntouchedBomb)
-        return "b";
+      if (this.disabled && this.cellState == CellState.UntouchedBomb) return "b";
       if (this.cellState == CellState.Flagged) return "F";
       if (this.cellState == CellState.Unsure) return "?";
 
@@ -57,9 +51,7 @@ export default defineComponent({
       var stateClass = stateClassMap.get(this.cellState);
 
       if (stateClass == undefined) {
-        throw new Error(
-          `Uh oh, we were supposed to know what the new cell class from ${this.cellState} would be`
-        );
+        throw new Error(`Uh oh, we were supposed to know what the new cell class from ${this.cellState} would be`);
       }
       cellClasses.push(stateClass);
       return cellClasses;
@@ -82,6 +74,11 @@ export default defineComponent({
   width: 2.5em;
   cursor: pointer;
   color: black;
+  transition: 0.4s;
+}
+
+.minesweeper-cell.untouched:hover {
+  background: hsla(184, 74%, 40%, 0.2);
 }
 
 .minesweeper-cell.disabled {

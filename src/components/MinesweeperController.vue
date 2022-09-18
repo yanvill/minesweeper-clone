@@ -111,11 +111,7 @@ export default defineComponent({
     },
     checkGameCleared() {
       let clearedCount = this.cells.filter((cell) => {
-        return (
-          cell == CellState.Cleared ||
-          cell == CellState.Flagged ||
-          cell == CellState.Unsure
-        );
+        return cell == CellState.Cleared || cell == CellState.Flagged || cell == CellState.Unsure;
       }).length;
       let bombCount = this.cells.filter((cell) => {
         return cell == CellState.UntouchedBomb;

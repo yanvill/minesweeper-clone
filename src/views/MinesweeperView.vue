@@ -19,7 +19,7 @@ import MinesweeperController from "../components/MinesweeperController.vue";
 
 @media (min-width: 1024px) {
   .minesweeper {
-    min-width: 70vw;
+    min-width: 60vw;
     min-height: 100vh;
     display: flex;
     justify-content: center;

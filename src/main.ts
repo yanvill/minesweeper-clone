@@ -1,6 +1,6 @@
 import { createApp } from "vue";
 import { createPinia } from "pinia";
-import mitt from 'mitt';
+import mitt from "mitt";
 
 import App from "./App.vue";
 import router from "./router";

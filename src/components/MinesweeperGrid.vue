@@ -1,15 +1,12 @@
 <script setup lang="ts">
-import type {
-  CellClickedEvent,
-  GameBoard,
-  GameHints,
-} from "../types/minesweeper";
+import { GameStatus, type CellClickedEvent, type GameBoard, type GameHints } from "../types/minesweeper";
 import MinesweeperCell from "./MinesweeperCell.vue";
 
 defineProps<{
   gameBoard: GameBoard;
   hints: GameHints;
   disabled: boolean;
+  gameStatus: GameStatus;
 }>();
 
 defineEmits<{
@@ -19,7 +16,6 @@ defineEmits<{
 
 <template>
   <div class="minesweeper-grid">
-    <br />
     <table>
       <tr v-for="i in gameBoard.length" :key="`row-${i}`" :id="`row-${i}`">
         <MinesweeperCell
@@ -30,6 +26,7 @@ defineEmits<{
           :cellState="gameBoard[i - 1][j - 1]"
           :hint="hints[i - 1][j - 1]"
           :disabled="disabled"
+          :class="gridClass"
           @clicked="handleCellClicked"
         />
       </tr>
@@ -44,6 +41,14 @@ export default defineComponent({
   components: {
     MinesweeperCell: MinesweeperCell,
   },
+  computeed: {
+    gridClass() {
+      return {
+        won: this.gameStatus == GameStatus.Won,
+        lost: this.gameStatus == GameStatus.Lost,
+      };
+    },
+  },
   methods: {
     handleCellClicked(event: CellClickedEvent) {
       this.$emit("cell-clicked", event);
@@ -54,9 +59,14 @@ export default defineComponent({
 
 <style scoped>
 .minesweeper-grid {
+  padding-top: 20px;
   display: flex;
   justify-content: center;
   text-align: center;
+}
+
+.minesweeper-grid.won {
+  background: greenyellow;
 }
 
 @media (min-width: 1024px) {

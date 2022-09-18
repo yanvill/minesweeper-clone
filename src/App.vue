@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from "vue-router";
-import HelloWorld from "./components/HelloWorld.vue";
+import GreetingsMessage from "./components/GreetingsMessage.vue";
 </script>
 
 <template>
   <header>
     <div class="wrapper">
-      <HelloWorld msg="Minesweeper Clone" />
+      <GreetingsMessage msg="Yannick Villanueva" />
 
       <nav>
         <RouterLink to="/">Home</RouterLink>
@@ -31,7 +31,7 @@ header {
 
 nav {
   width: 100%;
-  font-size: 12px;
+  font-size: 14px;
   text-align: center;
   margin-top: 2rem;
 }

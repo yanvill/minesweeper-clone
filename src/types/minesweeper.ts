@@ -9,6 +9,13 @@ export enum CellState {
   Cleared = "Cleared",
 }
 
+export enum GameStatus {
+  New = "New",
+  InProgress = "InProgress",
+  Won = "Success",
+  Lost = "Lost",
+}
+
 export enum Difficulty {
   Hard = "Hard",
   Medium = "Medium",
